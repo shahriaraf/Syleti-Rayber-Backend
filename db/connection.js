@@ -1,27 +1,34 @@
-const { MongoClient } = require('mongodb');
-require('dotenv').config();
+const { MongoClient } = require("mongodb");
+require("dotenv").config();
 
 const uri = process.env.MONGO_URI;
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+if (!uri) throw new Error("❌ MONGO_URI is missing in environment variables!");
 
-let db;
+let client;
+let clientPromise;
 
-const connectDB = async () => {
-    try {
-        await client.connect();
-        db = client.db(); // If your DB name is in the URI, this is enough. Otherwise, client.db("marriage_media")
-        console.log("MongoDB Connected successfully!");
-    } catch (err) {
-        console.error(err.message);
-        process.exit(1);
-    }
+if (process.env.NODE_ENV === "development") {
+  // In dev, reuse connection between hot reloads
+  if (!global._mongoClientPromise) {
+    client = new MongoClient(uri, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    global._mongoClientPromise = client.connect();
+  }
+  clientPromise = global._mongoClientPromise;
+} else {
+  // In production (Vercel), create a new client per request
+  client = new MongoClient(uri, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  });
+  clientPromise = client.connect();
+}
+
+const getDB = async () => {
+  const connectedClient = await clientPromise;
+  return connectedClient.db(); // will use DB name from URI
 };
 
-const getDB = () => {
-    if (db) {
-        return db;
-    }
-    throw new Error("No database found!");
-};
-
-module.exports = { connectDB, getDB };
+module.exports = { getDB };
