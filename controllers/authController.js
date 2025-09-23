@@ -1,12 +1,12 @@
 // controllers/authController.js
+
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { getDB } = require('../db/connection');
 
 // @desc    Register a new user
 // @route   POST /api/auth/register
 exports.registerUser = async (req, res) => {
-    const db = getDB(); // No 'await' needed anymore
+    const db = req.db; // Get the db instance from the request object
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -39,7 +39,7 @@ exports.registerUser = async (req, res) => {
 // @desc    Authenticate user & get token
 // @route   POST /api/auth/login
 exports.loginUser = async (req, res) => {
-    const db = getDB(); // No 'await' needed anymore
+    const db = req.db; // Get the db instance from the request object
     const { email, password } = req.body;
 
     try {

@@ -1,11 +1,11 @@
 // controllers/userController.js
-const { getDB } = require('../db/connection');
 
 // @desc    Get all user profiles
 // @route   GET /api/users/profiles
 exports.getAllProfiles = async (req, res) => {
-    const db = getDB(); // No 'await' needed anymore
+    const db = req.db; // Get the db instance from the request object
     try {
+        // Find all users but exclude the password field for security
         const profiles = await db.collection('users').find({}, { projection: { password: 0 } }).toArray();
         res.json(profiles);
     } catch (err) {
