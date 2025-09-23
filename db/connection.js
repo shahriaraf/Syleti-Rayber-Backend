@@ -1,34 +1,35 @@
+// db/connection.js
 const { MongoClient } = require("mongodb");
 require("dotenv").config();
 
 const uri = process.env.MONGO_URI;
-if (!uri) throw new Error("❌ MONGO_URI is missing in environment variables!");
-
-let client;
-let clientPromise;
-
-if (process.env.NODE_ENV === "development") {
-  // In dev, reuse connection between hot reloads
-  if (!global._mongoClientPromise) {
-    client = new MongoClient(uri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    global._mongoClientPromise = client.connect();
-  }
-  clientPromise = global._mongoClientPromise;
-} else {
-  // In production (Vercel), create a new client per request
-  client = new MongoClient(uri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  });
-  clientPromise = client.connect();
+if (!uri) {
+  throw new Error("❌ MONGO_URI is missing from your .env file!");
 }
 
-const getDB = async () => {
-  const connectedClient = await clientPromise;
-  return connectedClient.db(); // will use DB name from URI
+const client = new MongoClient(uri);
+let db;
+
+const connectDB = async () => {
+  if (db) {
+    return; // Already connected
+  }
+  try {
+    await client.connect();
+    db = client.db(); // Use the default database from your MONGO_URI
+    console.log("✅ MongoDB connected successfully!");
+  } catch (err) {
+    console.error("Failed to connect to MongoDB", err);
+    process.exit(1); // Exit the process with an error
+  }
 };
 
-module.exports = { getDB };
+// This function is now synchronous because we ensure the connection is established at startup.
+const getDB = () => {
+  if (!db) {
+    throw new Error("Database not connected. Make sure connectDB() is called at server start.");
+  }
+  return db;
+};
+
+module.exports = { connectDB, getDB };
