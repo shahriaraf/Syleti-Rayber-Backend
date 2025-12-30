@@ -9,7 +9,8 @@ const userRoutes = require('./routes/userRoutes');
 
 const app = express();
 
-const whitelist = ['https://www.merrigemedia.com', 'https://merrigemedia.com'];
+const whitelist = ['https://www.merrigemedia.com', 'https://merrigemedia.com', 'http://localhost:5173',
+  'http://localhost:3000'];
 
 const corsOptions = {
   origin: function (origin, callback) {
@@ -34,7 +35,7 @@ app.use('/api/users', userRoutes);
 
 
 app.get('/', (req, res) => {
-  res.send('Syleti Rayber API is running successfully on Vercel!');
+  res.send('API is running successfully on Vercel!');
 });
 
 
